@@ -12,6 +12,8 @@ app.use(express.json());
 
 const url = process.env.URL;
 
+const myFunc = (req, res) => {};
+
 app.get("/", (req, res) => {
   res.json("this works");
 });
@@ -122,18 +124,22 @@ app.patch("/users/:username", async (req, res) => {
 });
 
 app.get("/users", async (req, res) => {
-  const { data } = await axios.get(`${process.env.BASE_URL}users/rows`, {
-    headers: {
-      Accepts: "application/json",
-      "X-Cassandra-Token": process.env.ASTRA_TOKEN,
-    },
-  });
+  try {
+    const { data } = await axios.get(`${process.env.BASE_URL}users/rows`, {
+      headers: {
+        Accepts: "application/json",
+        "X-Cassandra-Token": process.env.ASTRA_TOKEN,
+      },
+    });
 
-  res.status(200).send({
-    msg: "Retrieved users.",
-    success: true,
-    data,
-  });
+    res.status(200).send({
+      msg: "Retrieved users.",
+      success: true,
+      data,
+    });
+  } catch (error) {
+    res.status(500).send(error);
+  }
 });
 
 app.listen(PORT, () => console.log(`server running on PORT ${PORT}`));
