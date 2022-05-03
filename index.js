@@ -12,8 +12,6 @@ app.use(express.json());
 
 const url = process.env.URL;
 
-const myFunc = (req, res) => {};
-
 app.get("/", (req, res) => {
   res.json("this works");
 });
@@ -50,6 +48,12 @@ app.post("/addscore", (req, res) => {
 app.post("/users", async (req, res) => {
   try {
     const username = req.body.username;
+
+    if (!username.match(/^[a-zA-Z]+$/)) {
+      res.status(400).send("Invalid username. Only use letter characters.");
+      return;
+    }
+
     const response = await axios.get(
       `${process.env.BASE_URL}users/${username}`,
       {
@@ -98,6 +102,22 @@ app.post("/users", async (req, res) => {
   }
 });
 
+app.delete("/users/:username", async (req, res) => {
+  try {
+    await axios.delete(`${process.env.BASE_URL}users/${req.params.username}`, {
+      headers: {
+        Accepts: "application/json",
+        "X-Cassandra-Token": process.env.ASTRA_TOKEN,
+      },
+    });
+    console.log(req.params.username);
+    res.status(200).send("user deleted");
+  } catch (error) {
+    console.log(error);
+    res.status(500).send(error);
+  }
+});
+
 app.patch("/users/:username", async (req, res) => {
   const highscore = req.body.highscore;
   const username = req.params.username;
@@ -116,10 +136,10 @@ app.patch("/users/:username", async (req, res) => {
       }
     );
 
-    res.status(200).send("ALL GOOD");
+    res.status(200).send(response.data);
   } catch (error) {
     console.log(error.response);
-    res.status(500).send("UH OH");
+    res.status(500).send(error);
   }
 });
 
